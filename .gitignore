@@ -1,0 +1,66 @@
+# Gradle files
+.gradle/
+build/
+*.apk
+*.aar
+*.ap_
+*.aab
+
+# Local configuration file
+local.properties
+ai_config.properties
+
+# Android Studio
+.idea/
+.classpath
+.cproject
+.c9/
+*.class
+*.dex
+*.jar
+*.lst
+*.log
+*.log
+*.swo
+*.swp
+*.zip
+*.zip_
+*.zi
+
+# Generated files
+build/
+Gen/
+out/
+
+# Intellij specific
+*.iml
+*.ipr
+*.iws
+.idea/
+libs/
+
+# The .vscode folder contains launch configuration and tasks you configure in
+# VS Code which you may want to be included in version control, so this line
+# is commented out by default.
+#.vscode/
+
+# macOS
+.DS_Store
+
+# Misc files
+*.jks
+*.key
+*.keystore
+.env
+.env.local
+.env.*.local
+
+# Node modules
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
