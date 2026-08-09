@@ -16,21 +16,21 @@ Cue is an Android application that provides real-time AI-powered suggestions dur
 ## Architecture
 
 ```
-┌─────────────────┐
-│  Android UI     │ (Compose)
-└────────┬────────┘
+┌──────────────────────────┐
+│  Android UI              │ (Compose)
+└────────┬─────────────────┘
          │
-┌────────▼──────────────┐
-│   CueViewModel         │ (StateFlow, ViewModel)
-└────────┬──────────────┘
+┌────────▼──────────────────┐
+│   CueViewModel            │ (StateFlow, ViewModel)
+└────────┬──────────────────┘
          │
-┌────────▼────────────────────────────┐
-│  ConversationEngine                 │ (Manages state & flow)
-├──────────────┬──────────────┬───────┤
-│              │              │       │
-▼              ▼              ▼       ▼
-SpeechToText  AIResponse  AudioInput Session
-Service       Service      Source    Repo
+┌────────▼────────────────────────────────────────────┐
+│  ConversationEngine                                  │
+├──────────────┬──────────────┬──────────────┬────────┤
+│              │              │              │        │
+▼              ▼              ▼              ▼        ▼
+SpeechToText  AIResponse  AudioInput  Session    Error
+Service       Service      Source      Repo     Handling
 ```
 
 ### Core Components
@@ -43,7 +43,7 @@ Service       Service      Source    Repo
   - `MockAIResponseService`: Local AI engine (no API key required)
   - `RemoteAIResponseService`: External AI provider (configurable)
 
-- **ConversationEngine**: Orchestrates the entire conversation flow
+- **ConversationEngine**: Orchestrates conversation flow
   - Manages conversation state
   - Coordinates services
   - Handles real-time updates
@@ -83,12 +83,7 @@ Service       Service      Source    Repo
 
 ## Demo Mode
 
-Demo Mode requires no API key and works completely offline. It provides:
-
-- Pre-scripted conversation scenarios
-- Simulated speech recognition
-- Fully functional AI suggestion engine
-- Complete UI/UX demonstration
+Demo Mode requires no API key and works completely offline.
 
 **To enter Demo Mode**: Launch the app and tap "Demo Conversation" on the home screen.
 
@@ -102,7 +97,7 @@ No configuration needed—the app works out of the box.
 
 ### External AI Provider
 
-To use an external provider (OpenAI, Gemini, etc.):
+To use an external provider:
 
 1. Create a file at `app/src/main/assets/ai_config.properties`:
    ```properties
@@ -112,93 +107,26 @@ To use an external provider (OpenAI, Gemini, etc.):
    ai_endpoint=https://api.openai.com/v1/chat/completions
    ```
 
-2. Update `AIProviderFactory` to use `RemoteAIResponseService`
+2. Rebuild and run
 
-3. Rebuild and run
-
-**Note**: API keys are not committed to the repository. The `ai_config.properties` file should be added to `.gitignore`.
+**Note**: API keys are not committed to the repository.
 
 ## Required Permissions
 
 - `RECORD_AUDIO` - To listen to the device microphone
 - `INTERNET` - Only if using an external AI provider
 
-The app requests microphone permission via the modern runtime permission system.
-
 ## Platform Limitations
 
 ### Cellular Call Audio Capture
 
-**Important**: Android does **not** provide unrestricted access to cellular call audio on standard devices. Attempting to capture both sides of a phone call requires:
-
-- Platform-specific permissions (not available to third-party apps)
-- Device manufacturer cooperation
-- Carrier system integration
-- Rooted devices or system-level changes
-
-**Cue's Approach**: The MVP is designed for general conversations using device microphone input. For cellular calls, users would need to:
-
-1. Use speaker phone (audio is then available via microphone)
-2. Use a supported VoIP service
-3. Use a supported video conferencing platform
-
-**Future Enhancement**: Once infrastructure is in place, Cue can integrate with VoIP services directly.
+**Important**: Android does **not** provide unrestricted access to cellular call audio. The MVP uses device microphone input for general conversations.
 
 ## Privacy & Data
 
 - **No Covert Recording**: The app does not secretly record conversations
 - **User Control**: All recording starts explicitly via the UI
 - **Local Processing**: Demo mode processes audio entirely on-device
-- **External Providers**: If configured, audio may be sent to an external AI provider
-- **Consent**: Users should comply with applicable recording/consent laws
-
-See the Privacy screen in the app for full details.
-
-## Session History
-
-Previous conversations are stored locally in a Room database and can be:
-
-- Viewed with transcript and summary
-- Copied for external use
-- Searched and filtered
-- Deleted manually
-
-## Testing
-
-Run unit and integration tests:
-
-```bash
-./gradlew test
-```
-
-UI tests:
-
-```bash
-./gradlew connectedAndroidTest
-```
-
-Key test areas:
-
-- Conversation state management
-- AI response parsing and generation
-- Transcript handling
-- Session persistence
-- Demo conversation scenarios
-- Error handling
-
-## Future Roadmap
-
-- Gemini API integration
-- OpenAI API integration
-- Local LLM support
-- Bluetooth headset integration
-- VoIP call integration
-- Real-time translation
-- Speaker identification
-- Voice output
-- Custom conversation strategies
-- Personalized user context
-- Advanced analytics
 
 ## Project Structure
 
@@ -219,22 +147,14 @@ app/
 └── src/androidTest/             # UI tests
 ```
 
-## Building for Production
+## Testing
 
-1. Ensure no secrets are in version control
-2. Add proper API endpoint configuration
-3. Implement rate limiting for API calls
-4. Add comprehensive error tracking
-5. Add usage analytics (with user consent)
-6. Create privacy policy and terms of service
-7. Test on multiple Android versions
-
-## Support
-
-For issues or questions, refer to the code comments and architecture documentation within the codebase.
+```bash
+./gradlew test
+./gradlew connectedAndroidTest
+```
 
 ---
 
 **Version**: 1.0 MVP  
-**Status**: Production Ready for Demo Mode  
-**Last Updated**: 2025
+**Status**: Production Ready for Demo Mode

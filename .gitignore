@@ -20,7 +20,6 @@ ai_config.properties
 *.jar
 *.lst
 *.log
-*.log
 *.swo
 *.swp
 *.zip
@@ -39,12 +38,7 @@ out/
 .idea/
 libs/
 
-# The .vscode folder contains launch configuration and tasks you configure in
-# VS Code which you may want to be included in version control, so this line
-# is commented out by default.
-#.vscode/
-
-# macOS
+macOS
 .DS_Store
 
 # Misc files
