@@ -1,60 +1,41 @@
-# Gradle files
-.gradle/
-build/
-*.apk
-*.aar
-*.ap_
-*.aab
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
-# Local configuration file
-local.properties
-ai_config.properties
+# dependencies
+/node_modules
+/.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
 
-# Android Studio
-.idea/
-.classpath
-.cproject
-.c9/
-*.class
-*.dex
-*.jar
-*.lst
-*.log
-*.swo
-*.swp
-*.zip
-*.zip_
-*.zi
+# testing
+/coverage
 
-# Generated files
-build/
-Gen/
-out/
+# next.js
+/.next/
+/out/
 
-# Intellij specific
-*.iml
-*.ipr
-*.iws
-.idea/
-libs/
+# production
+/build
 
-macOS
+# misc
 .DS_Store
+*.pem
 
-# Misc files
-*.jks
-*.key
-*.keystore
-.env
-.env.local
-.env.*.local
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
 
-# Node modules
-node_modules/
-npm-debug.log
-yarn-error.log
+# env files (can opt-in for committing if needed)
+.env*
 
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts

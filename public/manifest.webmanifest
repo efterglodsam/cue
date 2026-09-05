@@ -1,0 +1,17 @@
+{
+  "name": "Cue – Schema för teamet",
+  "short_name": "Cue",
+  "description": "Schema, byten, anslagstavla och placeringschecklista för personliga assistenter",
+  "start_url": "/schema",
+  "id": "/",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#2563eb",
+  "orientation": "portrait-primary",
+  "lang": "sv",
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
