@@ -62,6 +62,15 @@ $$;
 
 grant usage on schema public to anon, authenticated;
 grant usage on schema storage to anon, authenticated;
+-- Real Supabase projects grant USAGE on schema auth to anon/authenticated
+-- (that's how RLS policies and plpgsql functions can call auth.uid()/
+-- auth.role() at all). Mirror that here, otherwise any plain (non
+-- security definer) function body that calls auth.uid()/auth.role() in a
+-- freshly-parsed query fails with "permission denied for schema auth" even
+-- though the exact same calls work fine inside RLS policy expressions
+-- (pre-parsed) or inside existing `security definer` functions (run as
+-- owner).
+grant usage on schema auth to anon, authenticated;
 
 -- Supabase publications aren't meaningful outside a real Supabase project
 -- (no subscriber), and `alter publication ... add table` fails without one.

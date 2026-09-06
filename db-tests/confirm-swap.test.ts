@@ -209,6 +209,33 @@ describe("confirm_swap", () => {
     ).rejects.toThrow(/Inget erbjudet pass/);
   });
 
+  it("försvar i djupet: bekräftar inte om passet inte längre tillhör den som lade ut bytet", async () => {
+    // Insert-policyn på swap_requests hindrar normalt att den här raden ens
+    // kan skapas (se rls-swap-requests.test.ts), men confirm_swap() ska
+    // ändå aldrig lita blint på att den kollen redan gjorts — den kollar
+    // själv att passet fortfarande är tilldelat requested_by innan den
+    // flyttar det. Skriver raden direkt via service-anslutningen (förbi
+    // RLS) för att isolera just den här kollen i confirm_swap() själv.
+    const alice = await db.seedUser("Alice");
+    const bob = await db.seedUser("Bob");
+    const carl = await db.seedUser("Carl");
+    const shiftId = await makeShift(bob); // passet tillhör faktiskt Bob...
+    const requestId = await makeSwapRequest({
+      shiftId,
+      requestedBy: alice, // ...men förfrågan påstår att Alice lade ut det.
+      type: "ta_over",
+      responderId: carl,
+      status: "vantar_bekraftelse",
+    });
+
+    await expect(
+      db.asUser(alice, (client) => client.query("select public.confirm_swap($1, $2)", [requestId, alice])),
+    ).rejects.toThrow(/tillhör inte längre den som lade ut bytet/);
+
+    expect((await getShift(shiftId)).assigned_to).toBe(bob);
+    expect((await getRequest(requestId)).status).toBe("vantar_bekraftelse");
+  });
+
   it("race: två samtidiga bekräftelseförsök på samma förfrågan — bara det första vinner", async () => {
     const alice = await db.seedUser("Alice");
     const bob = await db.seedUser("Bob");
