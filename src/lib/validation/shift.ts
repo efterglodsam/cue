@@ -1,6 +1,8 @@
 // Ren valideringslogik för pass, utan beroenden på Supabase eller Server
 // Actions, så den går att enhetstesta isolerat.
 
+import { zonedWallTimeToUtc } from "@/lib/date-utils";
+
 export type ShiftInputResult =
   | {
       ok: true;
@@ -30,10 +32,13 @@ export function parseShiftInput(input: {
     return { ok: false, error: "Välj vem som ska jobba passet." };
   }
 
-  const start = new Date(startTime);
-  const end = new Date(endTime);
+  // Tiderna kommer från ett <input type="datetime-local"> och saknar
+  // tidszon — tolka dem som svensk lokal tid (se zonedWallTimeToUtc), inte
+  // som lokal tid i den miljö Server Action:en råkar köra i.
+  const start = zonedWallTimeToUtc(startTime);
+  const end = zonedWallTimeToUtc(endTime);
 
-  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
+  if (!start || !end || Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
     return { ok: false, error: "Ogiltigt datum eller tid." };
   }
   if (end <= start) {
