@@ -1,4 +1,4 @@
-﻿import {
+import {
   addDays,
   addMonths,
   addWeeks,
@@ -18,7 +18,7 @@ export function getWeekDays(anchor: Date): Date[] {
   return Array.from({ length: 7 }, (_, i) => addDays(start, i));
 }
 
-// Returnerar hela veckor (mån-sön) som täcker aktuell månad, för månadsvyn.
+// Returnerar hela veckor (mån–sön) som täcker aktuell månad, för månadsvyn.
 export function getMonthGrid(anchor: Date): Date[][] {
   const monthStart = startOfMonth(anchor);
   const monthEnd = endOfMonth(anchor);
@@ -54,21 +54,21 @@ export function formatDateTimeInput(date: Date): string {
 
 // Tidszonen alla arbetspass utgår från. Cue används av ett team i Sverige,
 // så en väggklocka som skrivs in i schemat ("09:00") menar alltid 09:00
-// svensk tid - oavsett vilken tidszon servern själv råkar köra i.
+// svensk tid — oavsett vilken tidszon servern själv råkar köra i.
 export const APP_TIME_ZONE = "Europe/Stockholm";
 
 /**
- * Tolkar en väggklocka utan tidszon - t.ex. värdet "2026-09-09T09:00" från
- * ett <input type="datetime-local">, eller en likadan sträng utan "T" - som
+ * Tolkar en väggklocka utan tidszon — t.ex. värdet "2026-09-09T09:00" från
+ * ett <input type="datetime-local">, eller en likadan sträng utan "T" — som
  * en tidpunkt i `timeZone` och returnerar motsvarande UTC-Date.
  *
  * `new Date("2026-09-09T09:00")` räcker INTE här: en sådan sträng utan
  * tidszon tolkas av JS-motorn som lokal tid i miljön den körs i. I webbläsaren
  * (svensk dator) blir det rätt, men Server Actions kör på servern, som ofta
- * har TZ=UTC - då blev 09:00 inskrivet i schemat sparat som 09:00 UTC, det
+ * har TZ=UTC — då blev 09:00 inskrivet i schemat sparat som 09:00 UTC, det
  * vill säga 11:00 svensk sommartid. Den här funktionen är oberoende av
  * miljöns egen tidszon: den frågar Intl.DateTimeFormat vad en given
- * UTC-tidpunkt visas som i målzonen, mäter mellanskillnaden och justerar -
+ * UTC-tidpunkt visas som i målzonen, mäter mellanskillnaden och justerar —
  * vilket hanterar sommar-/vintertid korrekt för vilket datum som helst.
  *
  * Returnerar null om strängen inte går att tolka.
@@ -118,7 +118,7 @@ export function zonedWallTimeToUtc(
   );
 
   // Mellanskillnaden är precis zonens offset vid den tidpunkten (t.ex.
-  // +2h sommartid, +1h vintertid) - dra bort den för att få rätt UTC-tid.
+  // +2h sommartid, +1h vintertid) — dra bort den för att få rätt UTC-tid.
   const offsetMs = shownAsUtcMs - guessUtcMs;
   return new Date(guessUtcMs - offsetMs);
 }
