@@ -82,14 +82,15 @@ function NewItemForm({ clientId }: { clientId: string }) {
 
   return (
     <form
-      action={(formData) =>
+      onSubmit={(event) => {
+        event.preventDefault();
+        const formData = new FormData(event.currentTarget);
         startTransition(async () => {
           const result = await createPlacementItem(clientId, formData);
           if (!result.ok) setError(result.error);
           else setOpen(false);
-        })
-      }
-      encType="multipart/form-data"
+        });
+      }}
       className="rounded-xl border border-slate-200 bg-white p-3"
     >
       <input
@@ -145,14 +146,15 @@ function PlacementItemCard({
   if (editing) {
     return (
       <form
-        action={(formData) =>
+        onSubmit={(event) => {
+          event.preventDefault();
+          const formData = new FormData(event.currentTarget);
           startTransition(async () => {
             const result = await updatePlacementItem(item.id, clientId, formData);
             if (!result.ok) setError(result.error);
             else setEditing(false);
-          })
-        }
-        encType="multipart/form-data"
+          });
+        }}
         className="rounded-xl border border-blue-200 bg-blue-50/40 p-3"
       >
         <input

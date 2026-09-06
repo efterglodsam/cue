@@ -2,11 +2,15 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
 import NewClientForm from "@/components/clients/NewClientForm";
+import { isDemoMode } from "@/lib/auth";
+import { demoStore } from "@/lib/demo-store";
 
 export default async function BrukarePage() {
   await requireProfile();
   const supabase = await createClient();
-  const { data: clients } = await supabase.from("clients").select("*").order("name");
+  const { data: clients } = isDemoMode
+    ? { data: [...demoStore.clients].sort((a, b) => a.name.localeCompare(b.name)) }
+    : await supabase.from("clients").select("*").order("name");
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-6">

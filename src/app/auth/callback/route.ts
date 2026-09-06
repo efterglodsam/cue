@@ -12,7 +12,10 @@ import { NextResponse, type NextRequest } from "next/server";
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
-  const next = searchParams.get("next") ?? "/schema";
+  const authError = searchParams.get("error_description") ?? searchParams.get("error");
+  const requestedNext = searchParams.get("next");
+  const next =
+    requestedNext && /^\/(?!\/)[^\s\\]*$/.test(requestedNext) ? requestedNext : "/schema";
 
   if (code) {
     const response = NextResponse.redirect(`${origin}${next}`);
@@ -40,5 +43,7 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  return NextResponse.redirect(`${origin}/login?error=Inloggningen misslyckades`);
+  const loginUrl = new URL("/login", origin);
+  loginUrl.searchParams.set("error", authError ?? "Inloggningen misslyckades");
+  return NextResponse.redirect(loginUrl);
 }

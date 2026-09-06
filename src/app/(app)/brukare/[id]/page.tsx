@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
 import PlacementChecklist from "@/components/placement/PlacementChecklist";
+import { isDemoMode } from "@/lib/auth";
+import { demoProfile, demoStore } from "@/lib/demo-store";
 
 export default async function BrukareDetailPage({
   params,
@@ -13,21 +15,29 @@ export default async function BrukareDetailPage({
   const { id } = await params;
   const supabase = await createClient();
 
-  const { data: client } = await supabase.from("clients").select("*").eq("id", id).single();
+  const { data: client } = isDemoMode
+    ? { data: demoStore.clients.find((candidate) => candidate.id === id) ?? null }
+    : await supabase.from("clients").select("*").eq("id", id).single();
   if (!client) notFound();
 
-  const [{ data: items }, { data: confirmations }, { data: profiles }] = await Promise.all([
-    supabase
-      .from("placement_items")
-      .select("*")
-      .eq("client_id", id)
-      .order("created_at", { ascending: true }),
-    supabase
-      .from("placement_confirmations")
-      .select("*")
-      .order("confirmed_at", { ascending: false }),
-    supabase.from("profiles").select("*"),
-  ]);
+  const [{ data: items }, { data: confirmations }, { data: profiles }] = isDemoMode
+    ? [
+        { data: demoStore.items.filter((item) => item.client_id === id) },
+        { data: demoStore.confirmations },
+        { data: [demoProfile] },
+      ]
+    : await Promise.all([
+        supabase
+          .from("placement_items")
+          .select("*")
+          .eq("client_id", id)
+          .order("created_at", { ascending: true }),
+        supabase
+          .from("placement_confirmations")
+          .select("*")
+          .order("confirmed_at", { ascending: false }),
+        supabase.from("profiles").select("*"),
+      ]);
 
   const itemIds = new Set((items ?? []).map((i) => i.id));
   const relevantConfirmations = (confirmations ?? []).filter((c) => itemIds.has(c.item_id));
