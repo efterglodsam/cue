@@ -58,14 +58,73 @@ describe("RLS: public.notes", () => {
     });
     expect(updated.body).toBe("Uppdaterad");
 
-    await db.asUser(alice, (client) =>
-      client.query("update public.notes set body = $1 where id = $2", ["Hackad", bobNote]),
-    );
+    // notes_update_guard() blockerar explicit (istället för att tyst göra
+    // 0 rader) om en icke-ägare försöker ändra innehållet.
+    await expect(
+      db.asUser(alice, (client) =>
+        client.query("update public.notes set body = $1 where id = $2", ["Hackad", bobNote]),
+      ),
+    ).rejects.toThrow(/bara den som skrev anteckningen/i);
+
     const untouched = await db.asService(async (client) => {
       const { rows } = await client.query("select body from public.notes where id = $1", [bobNote]);
       return rows[0];
     });
     expect(untouched.body).toBe("Hej teamet");
+  });
+
+  it("vem som helst kan fästa/lossa någon annans anteckning, men inte ändra innehållet samtidigt", async () => {
+    const alice = await db.seedUser("Alice");
+    const bob = await db.seedUser("Bob");
+    const bobNote = await makeNote(bob);
+
+    // Alice, som inte äger anteckningen, kan fästa den (pinned).
+    await db.asUser(alice, (client) =>
+      client.query("update public.notes set pinned = true where id = $1", [bobNote]),
+    );
+    const pinned = await db.asService(async (client) => {
+      const { rows } = await client.query("select pinned, body from public.notes where id = $1", [
+        bobNote,
+      ]);
+      return rows[0];
+    });
+    expect(pinned.pinned).toBe(true);
+    expect(pinned.body).toBe("Hej teamet");
+
+    // Men hon kan inte smuggla med en innehållsändring i samma update.
+    await expect(
+      db.asUser(alice, (client) =>
+        client.query("update public.notes set pinned = false, body = $1 where id = $2", [
+          "Hackad",
+          bobNote,
+        ]),
+      ),
+    ).rejects.toThrow(/bara den som skrev anteckningen/i);
+
+    const untouched = await db.asService(async (client) => {
+      const { rows } = await client.query("select pinned, body from public.notes where id = $1", [
+        bobNote,
+      ]);
+      return rows[0];
+    });
+    expect(untouched.pinned).toBe(true);
+    expect(untouched.body).toBe("Hej teamet");
+
+    // Ägaren själv kan förstås fortfarande ändra innehåll och pinned ihop.
+    await db.asUser(bob, (client) =>
+      client.query("update public.notes set pinned = false, body = $1 where id = $2", [
+        "Bobs egen ändring",
+        bobNote,
+      ]),
+    );
+    const byOwner = await db.asService(async (client) => {
+      const { rows } = await client.query("select pinned, body from public.notes where id = $1", [
+        bobNote,
+      ]);
+      return rows[0];
+    });
+    expect(byOwner.pinned).toBe(false);
+    expect(byOwner.body).toBe("Bobs egen ändring");
   });
 
   it("man kan ta bort sin egen anteckning men inte någon annans", async () => {

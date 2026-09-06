@@ -169,6 +169,13 @@ begin
     raise exception 'Bytesförfrågan hittades inte';
   end if;
 
+  -- Signalerar till swap_requests_guard() (se RLS-sektionen längre ner) att
+  -- de uppdateringar den här funktionen gör är betrodda — annars skulle
+  -- triggern blockera själva statusövergången till 'bekraftad', som annars
+  -- ALDRIG får ske via en direkt UPDATE från klienten. `is_local = true`
+  -- gör att flaggan bara gäller den här transaktionen.
+  perform set_config('cue.confirm_swap_in_progress', 'on', true);
+
   if v_request.status <> 'vantar_bekraftelse' then
     raise exception 'Bytet kan inte bekräftas i sitt nuvarande läge (%).', v_request.status;
   end if;
@@ -184,6 +191,16 @@ begin
   select * into v_shift from public.shifts where id = v_request.shift_id for update;
   if not found then
     raise exception 'Passet hittades inte';
+  end if;
+
+  -- Försvar i djupet: passet ska fortfarande vara tilldelat den som lade ut
+  -- bytet. Detta ska redan garanteras av insert-policyn på swap_requests
+  -- (requested_by måste vara shift.assigned_to när raden skapas), men om
+  -- passet hann tilldelas om till någon annan under tiden (eller om något
+  -- annat hål skulle finnas i den kontrollen) ska bekräftelsen ändå aldrig
+  -- flytta ett pass som inte faktiskt tillhör den som la ut bytet.
+  if v_shift.assigned_to <> v_request.requested_by then
+    raise exception 'Passet tillhör inte längre den som lade ut bytet.';
   end if;
 
   if v_request.type = 'ta_over' then
@@ -292,20 +309,152 @@ create policy "Inloggade kan hantera pass" on public.shifts
   for all using (auth.role() = 'authenticated') with check (auth.role() = 'authenticated');
 
 -- swap_requests
+--
+-- Tidigare tillät en enda "for all"-policy vilken inloggad användare som
+-- helst att skriva DIREKT till den här tabellen (t.ex. via webbläsarens
+-- devtools, förbi Server Actions helt). Det gjorde det möjligt att sätta
+-- status = 'bekraftad' utan att passet någonsin bytte ägare (confirm_swap()
+-- är den enda plats som faktiskt uppdaterar shifts.assigned_to atomiskt),
+-- eller att svara/avböja/avbryta på någon annans bytesförfrågan. RLS +
+-- swap_requests_guard()-triggern nedan speglar nu exakt samma
+-- tillståndsmaskin som src/lib/validation/swap.ts redan enhetstestar på
+-- applikationsnivå.
 create policy "Inloggade kan se bytesförfrågningar" on public.swap_requests
   for select using (auth.role() = 'authenticated');
-create policy "Inloggade kan hantera bytesförfrågningar" on public.swap_requests
-  for all using (auth.role() = 'authenticated') with check (auth.role() = 'authenticated');
+
+create policy "Man kan lägga ut sina egna pass för byte" on public.swap_requests
+  for insert
+  with check (
+    auth.role() = 'authenticated'
+    and requested_by = auth.uid()
+    and status = 'oppen'
+    and responder_id is null
+    and confirmed_at is null
+    -- Inte bara "man är inloggad som requested_by" — passet man lägger ut
+    -- måste faktiskt vara tilldelat en själv just nu. Annars kunde vem som
+    -- helst lägga ut EN ANNANS pass för byte (bara med sig själv som
+    -- requested_by) och sedan låta confirm_swap() flytta över det passet
+    -- till en "responder" utan att den verkliga ägaren varit inblandad alls.
+    and requested_by = (select assigned_to from public.shifts where id = shift_id)
+  );
+
+-- Vem som får RÖRA en rad (grovkornigt) — exakt vilka fält som får ändras
+-- till vad avgörs av swap_requests_guard()-triggern nedan.
+create policy "Berörda parter kan uppdatera en bytesförfrågan" on public.swap_requests
+  for update
+  using (
+    auth.role() = 'authenticated'
+    and (requested_by = auth.uid() or responder_id = auth.uid() or status = 'oppen')
+  )
+  with check (auth.role() = 'authenticated');
+
+-- Ingen delete-policy: appen tar aldrig bort bytesförfrågningar (bara sätter
+-- status = 'avbruten'), så direkt DELETE nekas som standard.
+
+create or replace function public.swap_requests_guard()
+returns trigger
+language plpgsql
+as $$
+begin
+  -- confirm_swap() har redan validerat och utför sina uppdateringar atomiskt
+  -- (inklusive att sätta status = 'bekraftad' och att ogiltigförklara andra
+  -- förfrågningar på samma pass) — lita på den och hoppa över resten.
+  if coalesce(current_setting('cue.confirm_swap_in_progress', true), '') = 'on' then
+    return new;
+  end if;
+
+  if new.shift_id is distinct from old.shift_id
+     or new.requested_by is distinct from old.requested_by
+     or new.created_at is distinct from old.created_at then
+    raise exception 'Får inte ändra shift_id, requested_by eller created_at på en bytesförfrågan.';
+  end if;
+
+  -- Bekräftelse får ENDAST ske via confirm_swap() (den enda plats som
+  -- faktiskt flyttar passet till den nya ägaren i samma transaktion).
+  if new.status = 'bekraftad' then
+    raise exception 'Ett byte kan bara bekräftas via confirm_swap().';
+  end if;
+
+  -- Svara på en öppen förfrågan (ta över / erbjuda direktbyte).
+  if old.status = 'oppen' and new.status = 'vantar_bekraftelse' then
+    if auth.uid() = old.requested_by then
+      raise exception 'Man kan inte svara på sin egen förfrågan.';
+    end if;
+    if new.responder_id is distinct from auth.uid() then
+      raise exception 'responder_id måste vara den som svarar.';
+    end if;
+    return new;
+  end if;
+
+  -- Avböja ett svar (tillbaka till öppen, nollställ svaret).
+  if old.status = 'vantar_bekraftelse' and new.status = 'oppen' then
+    if auth.uid() <> old.requested_by then
+      raise exception 'Endast den som lade ut passet kan avböja.';
+    end if;
+    if new.responder_id is not null or new.type is not null or new.offered_shift_id is not null then
+      raise exception 'Avböjning måste nollställa svaret.';
+    end if;
+    return new;
+  end if;
+
+  -- Avbryta hela bytet.
+  if new.status = 'avbruten' and old.status in ('oppen', 'vantar_bekraftelse') then
+    if auth.uid() <> old.requested_by then
+      raise exception 'Endast den som lade ut passet kan avbryta.';
+    end if;
+    return new;
+  end if;
+
+  raise exception 'Otillåten statusövergång (%->%) för bytesförfrågan.', old.status, new.status;
+end;
+$$;
+
+drop trigger if exists swap_requests_guard on public.swap_requests;
+create trigger swap_requests_guard before update on public.swap_requests
+  for each row execute procedure public.swap_requests_guard();
 
 -- notes
+--
+-- "Fäst/Lossa" i UI:t (togglePinNote i src/lib/actions/notes.ts) visas för
+-- ALLA anteckningar, inte bara egna — anslagstavlan är tänkt att vara en
+-- delad, teamgemensam yta där vem som helst kan fästa en viktig anteckning
+-- högst upp. Men RLS tillät tidigare bara author_id = auth.uid() att
+-- uppdatera en anteckning alls, så att fästa någon annans anteckning
+-- misslyckades helt tyst (0 rader uppdaterade, inget felmeddelande syns).
+-- Löst genom att öppna UPDATE för alla inloggade, men låta
+-- notes_update_guard()-triggern se till att en icke-ägare bara kan ändra
+-- `pinned` — allt annat innehåll (titel, text, kategori) är fortfarande
+-- skyddat och kräver att man är author_id, precis som testerna i
+-- db-tests/rls-notes.test.ts redan bevisar.
 create policy "Inloggade kan se anteckningar" on public.notes
   for select using (auth.role() = 'authenticated');
 create policy "Inloggade kan skapa anteckningar" on public.notes
   for insert with check (auth.uid() = author_id);
-create policy "Man kan redigera / ta bort egna anteckningar" on public.notes
-  for update using (auth.uid() = author_id);
+create policy "Inloggade kan uppdatera anteckningar (innehåll skyddas av trigger)" on public.notes
+  for update using (auth.role() = 'authenticated') with check (auth.role() = 'authenticated');
 create policy "Man kan ta bort egna anteckningar" on public.notes
   for delete using (auth.uid() = author_id);
+
+create or replace function public.notes_update_guard()
+returns trigger
+language plpgsql
+as $$
+begin
+  if auth.uid() is distinct from old.author_id then
+    if new.title is distinct from old.title
+       or new.body is distinct from old.body
+       or new.category is distinct from old.category
+       or new.author_id is distinct from old.author_id then
+      raise exception 'Bara den som skrev anteckningen får redigera innehållet.';
+    end if;
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists notes_update_guard on public.notes;
+create trigger notes_update_guard before update on public.notes
+  for each row execute procedure public.notes_update_guard();
 
 -- placement_items
 create policy "Inloggade kan se checklistor" on public.placement_items
@@ -320,10 +469,15 @@ create policy "Inloggade kan bekräfta" on public.placement_confirmations
   for insert with check (auth.uid() = confirmed_by);
 
 -- placement_item_history
+-- (insert-policyn krävde tidigare bara att man var inloggad, utan att
+-- kontrollera changed_by — vem som helst kunde alltså logga en ändring i
+-- en annan kollegas namn. src/lib/actions/placement.ts sätter redan alltid
+-- changed_by till den faktiska användaren, så den här skärpningen bryter
+-- inget existerande beteende.)
 create policy "Inloggade kan se historik" on public.placement_item_history
   for select using (auth.role() = 'authenticated');
-create policy "Systemet kan skriva historik" on public.placement_item_history
-  for insert with check (auth.role() = 'authenticated');
+create policy "Inloggade kan skriva historik i eget namn" on public.placement_item_history
+  for insert with check (auth.role() = 'authenticated' and changed_by = auth.uid());
 
 -- ============================================================
 -- Storage: bucket för foton till placeringschecklistan
