@@ -78,13 +78,28 @@ e-post – du får ett mejl med en inloggningslänk (magic link).
 ### 4. Kör tester
 
 ```bash
-npm run test
+npm run test      # enhets- och Server Action-tester (Vitest, inga beroenden)
+npm run test:db   # tester mot en riktig Postgres-instans (RLS + confirm_swap)
+npm run test:all  # båda
 ```
 
-Testerna täcker valideringen av pass (start/sluttid) och hela
-bytes-tillståndsmaskinen (`src/lib/validation/`) – den mest kritiska logiken
-i appen, så att ett pass aldrig kan hamna i ett inkonsekvent tillstånd (t.ex.
-två personer tilldelade samma pass).
+`npm run test` täcker valideringen av pass (start/sluttid), hela
+bytes-tillståndsmaskinen (`src/lib/validation/`), Server Actions
+(`src/lib/actions/`, med en mockad Supabase-klient), `date-utils.ts` och
+realtime-reducern.
+
+`npm run test:db` kräver en Postgres-instans (`DATABASE_URL`, default
+`postgres://postgres:postgres@127.0.0.1:5432/postgres` – i CI startas den
+som en service-container, se `.github/workflows/ci.yml`). Den kör
+`supabase/schema.sql` mot en engångsdatabas (se `db-tests/fixtures/` för de
+minimala auth/storage-stubbar som gör det möjligt utan Docker eller ett
+riktigt Supabase-projekt) och testar den faktiska
+atomiciteten i `confirm_swap` – inklusive ett race-test som verifierar att
+radlåset (`for update`) faktiskt blockerar en samtidig bekräftelse – samt
+RLS-policyerna på `profiles` och `notes`. Det är detta lager, inte
+applikationslagrets validering, som faktiskt garanterar att ett pass aldrig
+kan hamna i ett inkonsekvent tillstånd (t.ex. två personer tilldelade samma
+pass).
 
 ## Deploy till Vercel + Supabase (gratisnivå)
 
@@ -160,6 +175,10 @@ Alla tabeller har Row Level Security aktiverat. Eftersom alla i teamet ska se
 samma schema/anslagstavla finns ingen multi-tenant-uppdelning – policyerna
 säkerställer bara att man måste vara inloggad, samt att vissa åtgärder (t.ex.
 redigera/ta bort en anteckning) endast får göras av den som skapade den.
+Ett undantag: `profiles.is_admin` är särskilt skyddad – en användare får
+uppdatera sin egen profil men aldrig sin egen admin-status, och endast en
+admin får ändra någon annans (se `public.is_admin()` och policyn på
+`profiles` i `supabase/schema.sql`, samt `db-tests/rls-profiles.test.ts`).
 
 Bekräftelse av ett pass-byte görs via SQL-funktionen `confirm_swap`, som
 uppdaterar bytesförfrågan och flyttar pass-ägarskapet i en och samma

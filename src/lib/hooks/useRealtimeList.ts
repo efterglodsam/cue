@@ -3,6 +3,34 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 
+export interface RealtimePayload<T> {
+  eventType: "INSERT" | "UPDATE" | "DELETE" | string;
+  new: T;
+  old: T;
+}
+
+// Ren reducer, brutna ut ur useEffect så den går att enhetstesta utan att
+// rendera React eller prata med Supabase alls.
+export function applyRealtimeEvent<T extends { id: string }>(
+  current: T[],
+  payload: RealtimePayload<T>,
+): T[] {
+  if (payload.eventType === "INSERT") {
+    const row = payload.new;
+    if (current.some((r) => r.id === row.id)) return current;
+    return [...current, row];
+  }
+  if (payload.eventType === "UPDATE") {
+    const row = payload.new;
+    return current.map((r) => (r.id === row.id ? row : r));
+  }
+  if (payload.eventType === "DELETE") {
+    const row = payload.old;
+    return current.filter((r) => r.id !== row.id);
+  }
+  return current;
+}
+
 /**
  * Håller en lista av rader synkad med en Supabase-tabell via Realtime.
  * Startar från `initial` (hämtat server-side) och applicerar INSERT/UPDATE/
@@ -23,22 +51,9 @@ export function useRealtimeList<T extends { id: string }>(
         "postgres_changes",
         { event: "*", schema: "public", table },
         (payload) => {
-          setRows((current) => {
-            if (payload.eventType === "INSERT") {
-              const row = payload.new as T;
-              if (current.some((r) => r.id === row.id)) return current;
-              return [...current, row];
-            }
-            if (payload.eventType === "UPDATE") {
-              const row = payload.new as T;
-              return current.map((r) => (r.id === row.id ? row : r));
-            }
-            if (payload.eventType === "DELETE") {
-              const row = payload.old as T;
-              return current.filter((r) => r.id !== row.id);
-            }
-            return current;
-          });
+          setRows((current) =>
+            applyRealtimeEvent(current, payload as unknown as RealtimePayload<T>),
+          );
         },
       )
       .subscribe();
