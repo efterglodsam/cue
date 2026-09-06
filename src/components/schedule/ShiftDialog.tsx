@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import Link from "next/link";
 import { createShift, updateShift, deleteShift } from "@/lib/actions/shifts";
 import { formatDateTimeInput } from "@/lib/date-utils";
+import { getFirstName } from "@/lib/profile-utils";
 import type { Client, Profile, Shift } from "@/lib/supabase/types";
 
 export default function ShiftDialog({
@@ -50,13 +51,13 @@ export default function ShiftDialog({
   }
 
   return (
-    <div className="fixed inset-0 z-30 flex items-end justify-center bg-black/40 md:items-center">
-      <div className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-t-2xl bg-white p-5 shadow-xl md:rounded-2xl">
+    <div className="fixed inset-0 z-30 flex items-end justify-center bg-black/60 md:items-center">
+      <div className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-t-2xl bg-slate-900 p-5 shadow-xl md:rounded-2xl">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-slate-900">
+          <h2 className="text-lg font-semibold text-slate-100">
             {shift ? "Redigera pass" : "Nytt pass"}
           </h2>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600" aria-label="Stäng">
+          <button onClick={onClose} className="text-slate-500 hover:text-slate-300" aria-label="Stäng">
             ✕
           </button>
         </div>
@@ -64,49 +65,49 @@ export default function ShiftDialog({
         <form action={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium text-slate-700">Start</label>
+              <label className="block text-sm font-medium text-slate-300">Start</label>
               <input
                 type="datetime-local"
                 name="start_time"
                 required
                 defaultValue={formatDateTimeInput(start)}
-                className="mt-1 w-full rounded-lg border border-slate-300 px-2.5 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                className="mt-1 w-full rounded-lg border border-slate-600 bg-slate-800 px-2.5 py-2 text-sm text-slate-100 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-900"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700">Slut</label>
+              <label className="block text-sm font-medium text-slate-300">Slut</label>
               <input
                 type="datetime-local"
                 name="end_time"
                 required
                 defaultValue={formatDateTimeInput(end)}
-                className="mt-1 w-full rounded-lg border border-slate-300 px-2.5 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                className="mt-1 w-full rounded-lg border border-slate-600 bg-slate-800 px-2.5 py-2 text-sm text-slate-100 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-900"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700">Vem jobbar?</label>
+            <label className="block text-sm font-medium text-slate-300">Vem jobbar?</label>
             <select
               name="assigned_to"
               required
               defaultValue={shift?.assigned_to ?? currentUserId}
-              className="mt-1 w-full rounded-lg border border-slate-300 px-2.5 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              className="mt-1 w-full rounded-lg border border-slate-600 bg-slate-800 px-2.5 py-2 text-sm text-slate-100 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-900"
             >
               {profiles.map((p) => (
                 <option key={p.id} value={p.id}>
-                  {p.full_name}
+                  {getFirstName(p.full_name)}
                 </option>
               ))}
             </select>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700">Brukare/plats (valfritt)</label>
+            <label className="block text-sm font-medium text-slate-300">Brukare/plats (valfritt)</label>
             <select
               name="client_id"
               defaultValue={shift?.client_id ?? ""}
-              className="mt-1 w-full rounded-lg border border-slate-300 px-2.5 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              className="mt-1 w-full rounded-lg border border-slate-600 bg-slate-800 px-2.5 py-2 text-sm text-slate-100 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-900"
             >
               <option value="">Ingen vald</option>
               {clients.map((c) => (
@@ -118,17 +119,17 @@ export default function ShiftDialog({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700">Anteckning (valfritt)</label>
+            <label className="block text-sm font-medium text-slate-300">Anteckning (valfritt)</label>
             <textarea
               name="notes"
               defaultValue={shift?.notes ?? ""}
               rows={2}
-              className="mt-1 w-full rounded-lg border border-slate-300 px-2.5 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              className="mt-1 w-full rounded-lg border border-slate-600 bg-slate-800 px-2.5 py-2 text-sm text-slate-100 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-900"
             />
           </div>
 
           {error && (
-            <p className="text-sm text-red-600" role="alert">
+            <p className="text-sm text-red-400" role="alert">
               {error}
             </p>
           )}
@@ -136,7 +137,7 @@ export default function ShiftDialog({
           {shift && shift.assigned_to === currentUserId && (
             <Link
               href={`/byten?lagg_ut=${shift.id}`}
-              className="block w-full rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-center text-sm font-medium text-blue-700 hover:bg-blue-100"
+              className="block w-full rounded-lg border border-blue-800 bg-blue-950 px-3 py-2 text-center text-sm font-medium text-blue-300 hover:bg-blue-900"
             >
               🔁 Lägg ut för byte
             </Link>
@@ -152,7 +153,7 @@ export default function ShiftDialog({
               <button
                 type="button"
                 onClick={onClose}
-                className="rounded-lg px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100"
+                className="rounded-lg px-4 py-2 text-sm font-medium text-slate-300 hover:bg-slate-800"
               >
                 Avbryt
               </button>
@@ -180,7 +181,7 @@ function DeleteShiftButton({ shiftId, onDeleted }: { shiftId: string; onDeleted:
     return (
       <div className="flex flex-col gap-1">
         <div className="flex items-center gap-2">
-          <span className="text-xs text-slate-500">Ta bort passet?</span>
+          <span className="text-xs text-slate-400">Ta bort passet?</span>
           <button
             type="button"
             disabled={isPending}
@@ -198,12 +199,12 @@ function DeleteShiftButton({ shiftId, onDeleted }: { shiftId: string; onDeleted:
           <button
             type="button"
             onClick={() => setConfirming(false)}
-            className="text-xs font-medium text-slate-500"
+            className="text-xs font-medium text-slate-400"
           >
             Avbryt
           </button>
         </div>
-        {error && <p className="text-xs text-red-600">{error}</p>}
+        {error && <p className="text-xs text-red-400">{error}</p>}
       </div>
     );
   }
@@ -212,7 +213,7 @@ function DeleteShiftButton({ shiftId, onDeleted }: { shiftId: string; onDeleted:
     <button
       type="button"
       onClick={() => setConfirming(true)}
-      className="rounded-lg px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50"
+      className="rounded-lg px-3 py-2 text-sm font-medium text-red-400 hover:bg-red-950"
     >
       Ta bort
     </button>

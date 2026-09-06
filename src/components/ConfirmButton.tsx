@@ -22,7 +22,7 @@ export default function ConfirmButton({
   if (confirming) {
     return (
       <div className="flex items-center gap-2 text-sm">
-        <span className="text-slate-600">{confirmText}</span>
+        <span className="text-slate-300">{confirmText}</span>
         <button
           type="button"
           disabled={isPending}
@@ -42,7 +42,7 @@ export default function ConfirmButton({
         <button
           type="button"
           onClick={() => setConfirming(false)}
-          className="rounded-md px-2.5 py-1 font-medium text-slate-500 hover:bg-slate-100"
+          className="rounded-md px-2.5 py-1 font-medium text-slate-400 hover:bg-slate-800"
         >
           Avbryt
         </button>
@@ -56,7 +56,7 @@ export default function ConfirmButton({
         {label}
       </button>
       {error && (
-        <p className="text-xs text-red-600" role="alert">
+        <p className="text-xs text-red-400" role="alert">
           {error}
         </p>
       )}

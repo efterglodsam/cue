@@ -44,11 +44,11 @@ export default async function BrukareDetailPage({
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-6">
-      <Link href="/brukare" className="text-sm font-medium text-blue-600">
+      <Link href="/brukare" className="text-sm font-medium text-blue-400">
         ← Alla brukare
       </Link>
-      <h1 className="mt-1 mb-1 text-2xl font-bold text-slate-900">{client.name}</h1>
-      {client.address && <p className="mb-4 text-sm text-slate-500">{client.address}</p>}
+      <h1 className="mt-1 mb-1 text-2xl font-bold text-slate-100">{client.name}</h1>
+      {client.address && <p className="mb-4 text-sm text-slate-400">{client.address}</p>}
 
       <PlacementChecklist
         clientId={client.id}

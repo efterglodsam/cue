@@ -5,6 +5,7 @@ import { useRealtimeList } from "@/lib/hooks/useRealtimeList";
 import { formatDate, sv } from "@/lib/date-utils";
 import { createNote, deleteNote, togglePinNote, updateNote } from "@/lib/actions/notes";
 import ConfirmButton from "@/components/ConfirmButton";
+import { getFirstName } from "@/lib/profile-utils";
 import type { Note, Profile } from "@/lib/supabase/types";
 
 export default function NoteBoard({
@@ -33,7 +34,7 @@ export default function NoteBoard({
       <NewNoteForm />
       <div className="space-y-3">
         {notes.length === 0 && (
-          <p className="text-sm text-slate-400">Inga anteckningar än — skriv den första!</p>
+          <p className="text-sm text-slate-500">Inga anteckningar än — skriv den första!</p>
         )}
         {notes.map((note) => (
           <NoteCard
@@ -71,7 +72,7 @@ function NewNoteForm() {
     <form
       id="new-note-form"
       action={handleSubmit}
-      className="rounded-xl border border-slate-200 bg-white p-3"
+      className="rounded-xl border border-slate-700 bg-slate-900 p-3"
     >
       <textarea
         name="body"
@@ -79,28 +80,28 @@ function NewNoteForm() {
         onFocus={() => setExpanded(true)}
         rows={expanded ? 3 : 1}
         placeholder="Skriv en anteckning till teamet…"
-        className="w-full resize-none rounded-lg border-none p-1 text-sm outline-none placeholder:text-slate-400"
+        className="w-full resize-none rounded-lg border-none bg-transparent p-1 text-sm text-slate-100 outline-none placeholder:text-slate-500"
       />
       {expanded && (
         <div className="mt-2 flex flex-wrap items-center gap-2">
           <input
             name="title"
             placeholder="Rubrik (valfritt)"
-            className="rounded-md border border-slate-300 px-2 py-1 text-xs"
+            className="rounded-md border border-slate-600 bg-slate-800 px-2 py-1 text-xs text-slate-100"
           />
           <input
             name="category"
             placeholder="Kategori (valfritt)"
-            className="rounded-md border border-slate-300 px-2 py-1 text-xs"
+            className="rounded-md border border-slate-600 bg-slate-800 px-2 py-1 text-xs text-slate-100"
           />
-          <label className="flex items-center gap-1 text-xs text-slate-600">
+          <label className="flex items-center gap-1 text-xs text-slate-300">
             <input type="checkbox" name="pinned" /> Fäst högst upp
           </label>
           <div className="ml-auto flex gap-2">
             <button
               type="button"
               onClick={() => setExpanded(false)}
-              className="rounded-md px-2.5 py-1.5 text-xs font-medium text-slate-500"
+              className="rounded-md px-2.5 py-1.5 text-xs font-medium text-slate-400"
             >
               Avbryt
             </button>
@@ -114,7 +115,7 @@ function NewNoteForm() {
           </div>
         </div>
       )}
-      {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
+      {error && <p className="mt-1 text-xs text-red-400">{error}</p>}
     </form>
   );
 }
@@ -134,33 +135,33 @@ function NoteCard({ note, author, isMine }: { note: Note; author?: Profile; isMi
             else setEditing(false);
           })
         }
-        className="rounded-xl border border-blue-200 bg-blue-50/40 p-3"
+        className="rounded-xl border border-blue-800 bg-blue-950/40 p-3"
       >
         <input
           name="title"
           defaultValue={note.title ?? ""}
           placeholder="Rubrik (valfritt)"
-          className="mb-2 w-full rounded-md border border-slate-300 px-2 py-1 text-sm"
+          className="mb-2 w-full rounded-md border border-slate-600 bg-slate-800 px-2 py-1 text-sm text-slate-100"
         />
         <textarea
           name="body"
           defaultValue={note.body}
           required
           rows={3}
-          className="w-full rounded-md border border-slate-300 px-2 py-1 text-sm"
+          className="w-full rounded-md border border-slate-600 bg-slate-800 px-2 py-1 text-sm text-slate-100"
         />
         <input
           name="category"
           defaultValue={note.category ?? ""}
           placeholder="Kategori (valfritt)"
-          className="mt-2 w-full rounded-md border border-slate-300 px-2 py-1 text-xs"
+          className="mt-2 w-full rounded-md border border-slate-600 bg-slate-800 px-2 py-1 text-xs text-slate-100"
         />
-        {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
+        {error && <p className="mt-1 text-xs text-red-400">{error}</p>}
         <div className="mt-2 flex gap-2">
           <button
             type="button"
             onClick={() => setEditing(false)}
-            className="rounded-md px-2.5 py-1.5 text-xs font-medium text-slate-500"
+            className="rounded-md px-2.5 py-1.5 text-xs font-medium text-slate-400"
           >
             Avbryt
           </button>
@@ -177,17 +178,17 @@ function NoteCard({ note, author, isMine }: { note: Note; author?: Profile; isMi
   }
 
   return (
-    <div className={`rounded-xl border p-3 ${note.pinned ? "border-amber-300 bg-amber-50" : "border-slate-200 bg-white"}`}>
+    <div className={`rounded-xl border p-3 ${note.pinned ? "border-amber-700 bg-amber-950" : "border-slate-700 bg-slate-900"}`}>
       <div className="flex items-start justify-between gap-2">
         <div>
           {note.pinned && <span className="mr-1 text-xs">📌</span>}
-          {note.title && <p className="font-semibold text-slate-800">{note.title}</p>}
-          <p className="whitespace-pre-wrap text-sm text-slate-700">{note.body}</p>
+          {note.title && <p className="font-semibold text-slate-100">{note.title}</p>}
+          <p className="whitespace-pre-wrap text-sm text-slate-200">{note.body}</p>
         </div>
       </div>
-      <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-400">
+      <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500">
         <span>
-          {author?.full_name ?? "Okänd"} ·{" "}
+          {getFirstName(author?.full_name)} ·{" "}
           {formatDate(new Date(note.created_at), "d MMM HH:mm", { locale: sv })}
           {note.category ? ` · ${note.category}` : ""}
         </span>
@@ -198,19 +199,19 @@ function NoteCard({ note, author, isMine }: { note: Note; author?: Profile; isMi
                 await togglePinNote(note.id, !note.pinned);
               })
             }
-            className="font-medium text-slate-500 hover:text-slate-700"
+            className="font-medium text-slate-400 hover:text-slate-200"
           >
             {note.pinned ? "Lossa" : "Fäst"}
           </button>
           {isMine && (
             <>
-              <button onClick={() => setEditing(true)} className="font-medium text-blue-600">
+              <button onClick={() => setEditing(true)} className="font-medium text-blue-400">
                 Redigera
               </button>
               <ConfirmButton
                 onConfirm={() => deleteNote(note.id)}
                 label="Ta bort"
-                className="font-medium text-red-600"
+                className="font-medium text-red-400"
                 confirmText="Ta bort anteckningen?"
               />
             </>

@@ -3,6 +3,7 @@
 import { useMemo, useState, useTransition } from "react";
 import { useRealtimeList } from "@/lib/hooks/useRealtimeList";
 import { formatDate, formatTime, sv } from "@/lib/date-utils";
+import { getFirstName } from "@/lib/profile-utils";
 import {
   cancelSwap,
   confirmSwap,
@@ -58,11 +59,11 @@ export default function SwapView({
   return (
     <div className="space-y-8">
       <section>
-        <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-slate-500">
+        <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-slate-400">
           Lägg ut ett eget pass
         </h2>
         {availableToOffer.length === 0 ? (
-          <p className="text-sm text-slate-400">Du har inga kommande pass utan pågående byte.</p>
+          <p className="text-sm text-slate-500">Du har inga kommande pass utan pågående byte.</p>
         ) : (
           <div className="space-y-2">
             {availableToOffer.map((shift) => (
@@ -78,11 +79,11 @@ export default function SwapView({
       </section>
 
       <section>
-        <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-slate-500">
+        <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-slate-400">
           Öppna bytesförfrågningar
         </h2>
         {openFromOthers.length === 0 ? (
-          <p className="text-sm text-slate-400">Inga öppna förfrågningar just nu.</p>
+          <p className="text-sm text-slate-500">Inga öppna förfrågningar just nu.</p>
         ) : (
           <div className="space-y-3">
             {openFromOthers.map((req) => (
@@ -100,11 +101,11 @@ export default function SwapView({
       </section>
 
       <section>
-        <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-slate-500">
+        <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-slate-400">
           Mina förfrågningar
         </h2>
         {mine.length === 0 ? (
-          <p className="text-sm text-slate-400">Du har inga aktiva bytesförfrågningar.</p>
+          <p className="text-sm text-slate-500">Du har inga aktiva bytesförfrågningar.</p>
         ) : (
           <div className="space-y-3">
             {mine
@@ -124,20 +125,20 @@ export default function SwapView({
       </section>
 
       <section>
-        <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-slate-500">Historik</h2>
+        <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-slate-400">Historik</h2>
         {history.length === 0 ? (
-          <p className="text-sm text-slate-400">Inga tidigare byten än.</p>
+          <p className="text-sm text-slate-500">Inga tidigare byten än.</p>
         ) : (
           <div className="space-y-2">
             {history.map((req) => (
-              <div key={req.id} className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm">
-                <p className="text-slate-700">
+              <div key={req.id} className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm">
+                <p className="text-slate-300">
                   {shiftLabel(shiftById.get(req.shift_id), clientById)}
                 </p>
-                <p className="text-xs text-slate-400">
+                <p className="text-xs text-slate-500">
                   {req.status === "bekraftad"
-                    ? `${profileById.get(req.requested_by)?.full_name ?? "?"} bytte med ${
-                        profileById.get(req.responder_id ?? "")?.full_name ?? "?"
+                    ? `${getFirstName(profileById.get(req.requested_by)?.full_name)} bytte med ${
+                        getFirstName(profileById.get(req.responder_id ?? "")?.full_name)
                       }${req.confirmed_at ? ` · ${formatDate(new Date(req.confirmed_at), "d MMM HH:mm", { locale: sv })}` : ""}`
                     : "Svar avböjt"}
                 </p>
@@ -164,9 +165,9 @@ function PutUpShiftRow({
   const [isPending, startTransition] = useTransition();
 
   return (
-    <div className={`rounded-lg border px-3 py-2.5 ${autoOpen ? "border-blue-300 bg-blue-50" : "border-slate-200 bg-white"}`}>
+    <div className={`rounded-lg border px-3 py-2.5 ${autoOpen ? "border-blue-700 bg-blue-950" : "border-slate-700 bg-slate-900"}`}>
       <div className="flex items-center justify-between gap-2">
-        <p className="text-sm text-slate-700">{shiftLabel(shift, clientById)}</p>
+        <p className="text-sm text-slate-300">{shiftLabel(shift, clientById)}</p>
         {!open && (
           <button
             onClick={() => setOpen(true)}
@@ -191,10 +192,10 @@ function PutUpShiftRow({
           >
             {isPending ? "Lägger ut…" : "Bekräfta: lägg ut passet"}
           </button>
-          <button onClick={() => setOpen(false)} className="text-xs font-medium text-slate-500">
+          <button onClick={() => setOpen(false)} className="text-xs font-medium text-slate-400">
             Avbryt
           </button>
-          {error && <p className="text-xs text-red-600">{error}</p>}
+          {error && <p className="text-xs text-red-400">{error}</p>}
         </div>
       )}
     </div>
@@ -228,9 +229,9 @@ function OpenRequestCard({
   }
 
   return (
-    <div className="rounded-lg border border-slate-200 bg-white p-3">
-      <p className="text-sm font-medium text-slate-800">{shiftLabel(shift, clientById)}</p>
-      <p className="text-xs text-slate-500">Utlagt av {requester?.full_name ?? "okänd"}</p>
+    <div className="rounded-lg border border-slate-700 bg-slate-900 p-3">
+      <p className="text-sm font-medium text-slate-100">{shiftLabel(shift, clientById)}</p>
+      <p className="text-xs text-slate-400">Utlagt av {getFirstName(requester?.full_name) || "okänd"}</p>
 
       <div className="mt-2 flex flex-wrap items-center gap-2">
         <button
@@ -244,7 +245,7 @@ function OpenRequestCard({
           <button
             disabled={isPending}
             onClick={() => setMode(mode === "byte" ? "none" : "byte")}
-            className="rounded-md border border-slate-300 px-2.5 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50"
+            className="rounded-md border border-slate-600 px-2.5 py-1.5 text-xs font-medium text-slate-300 hover:bg-slate-800"
           >
             Erbjud direktbyte
           </button>
@@ -256,7 +257,7 @@ function OpenRequestCard({
           <select
             value={selectedShift}
             onChange={(e) => setSelectedShift(e.target.value)}
-            className="rounded-md border border-slate-300 px-2 py-1.5 text-xs"
+            className="rounded-md border border-slate-600 bg-slate-800 px-2 py-1.5 text-xs text-slate-100"
           >
             {myShifts.map((s) => (
               <option key={s.id} value={s.id}>
@@ -273,7 +274,7 @@ function OpenRequestCard({
           </button>
         </div>
       )}
-      {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
+      {error && <p className="mt-1 text-xs text-red-400">{error}</p>}
     </div>
   );
 }
@@ -303,16 +304,16 @@ function MyRequestCard({
   }
 
   return (
-    <div className="rounded-lg border border-slate-200 bg-white p-3">
-      <p className="text-sm font-medium text-slate-800">{shiftLabel(shift, clientById)}</p>
+    <div className="rounded-lg border border-slate-700 bg-slate-900 p-3">
+      <p className="text-sm font-medium text-slate-100">{shiftLabel(shift, clientById)}</p>
 
       {request.status === "oppen" && (
         <>
-          <p className="text-xs text-slate-500">Väntar på att någon svarar…</p>
+          <p className="text-xs text-slate-400">Väntar på att någon svarar…</p>
           <button
             disabled={isPending}
             onClick={() => run(() => cancelSwap(request.id))}
-            className="mt-2 rounded-md border border-slate-300 px-2.5 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50"
+            className="mt-2 rounded-md border border-slate-600 px-2.5 py-1.5 text-xs font-medium text-slate-300 hover:bg-slate-800"
           >
             Avbryt bytet
           </button>
@@ -321,8 +322,8 @@ function MyRequestCard({
 
       {request.status === "vantar_bekraftelse" && (
         <>
-          <p className="rounded-md bg-amber-50 px-2 py-1 text-xs font-medium text-amber-800">
-            {responder?.full_name ?? "Någon"} vill{" "}
+          <p className="rounded-md bg-amber-950 px-2 py-1 text-xs font-medium text-amber-300">
+            {getFirstName(responder?.full_name) || "Någon"} vill{" "}
             {request.type === "direkt_byte" ? "byta mot sitt pass" : "ta över"} passet
             {offeredShift ? ` (${shiftLabel(offeredShift, clientById)})` : ""}. Bekräfta för att
             genomföra bytet.
@@ -338,14 +339,14 @@ function MyRequestCard({
             <button
               disabled={isPending}
               onClick={() => run(() => declineSwapResponse(request.id))}
-              className="rounded-md border border-slate-300 px-2.5 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50"
+              className="rounded-md border border-slate-600 px-2.5 py-1.5 text-xs font-medium text-slate-300 hover:bg-slate-800"
             >
               Avböj svaret
             </button>
           </div>
         </>
       )}
-      {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
+      {error && <p className="mt-1 text-xs text-red-400">{error}</p>}
     </div>
   );
 }

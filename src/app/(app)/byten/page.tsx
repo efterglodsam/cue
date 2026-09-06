@@ -44,7 +44,7 @@ export default async function BytenPage({
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-6">
-      <h1 className="mb-4 text-2xl font-bold text-slate-900">Passbyten</h1>
+      <h1 className="mb-4 text-2xl font-bold text-slate-100">Passbyten</h1>
       <SwapView
         initialSwapRequests={swapRequests ?? []}
         allShifts={referencedShifts ?? []}

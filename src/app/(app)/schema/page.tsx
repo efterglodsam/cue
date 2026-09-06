@@ -15,7 +15,7 @@ export default async function SchemaPage() {
   return (
     <div className="mx-auto max-w-6xl px-4 py-6">
       <div className="mb-4 flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-slate-900">Schema</h1>
+        <h1 className="text-2xl font-bold text-slate-100">Schema</h1>
       </div>
       <ScheduleView
         initialShifts={shifts ?? []}
