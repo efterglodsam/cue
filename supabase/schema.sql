@@ -252,8 +252,32 @@ alter table public.placement_item_history enable row level security;
 -- profiles
 create policy "Inloggade kan se alla profiler" on public.profiles
   for select using (auth.role() = 'authenticated');
-create policy "Man kan uppdatera sin egen profil" on public.profiles
-  for update using (auth.uid() = id);
+
+-- Säkerhetsdefinierad hjälpfunktion: slår upp is_admin utan att gå via RLS på
+-- profiles (annars riskerar en policy som anropar denna funktion rekursion).
+create or replace function public.is_admin(check_uid uuid)
+returns boolean
+language sql
+security definer
+set search_path = public
+stable
+as $$
+  select coalesce((select p.is_admin from public.profiles p where p.id = check_uid), false);
+$$;
+
+-- Var och en får uppdatera sin egen profil, men INTE sin egen admin-status
+-- (annars kan vem som helst göra sig själv till admin direkt mot databasen,
+-- förbi kontrollen i Server Action-lagret). En admin får däremot uppdatera
+-- vem som helsts profil, inklusive admin-status — det är så `setAdminStatus`
+-- i src/lib/actions/team.ts faktiskt kan fungera.
+create policy "Uppdatera profil: sig själv (ej admin-status) eller admin uppdaterar valfri profil"
+  on public.profiles
+  for update
+  using (auth.uid() = id or public.is_admin(auth.uid()))
+  with check (
+    public.is_admin(auth.uid())
+    or (auth.uid() = id and is_admin = (select p.is_admin from public.profiles p where p.id = auth.uid()))
+  );
 
 -- clients
 create policy "Inloggade kan se brukare" on public.clients
