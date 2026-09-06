@@ -12,7 +12,7 @@ export default async function InstallningarPage() {
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-6">
-      <h1 className="mb-4 text-2xl font-bold text-slate-900">Inställningar</h1>
+      <h1 className="mb-4 text-2xl font-bold text-slate-100">Inställningar</h1>
       <TeamAdmin profiles={profiles ?? []} currentUserId={profile.id} />
     </div>
   );

@@ -10,6 +10,7 @@ import {
   updatePlacementItem,
 } from "@/lib/actions/placement";
 import ConfirmButton from "@/components/ConfirmButton";
+import { getFirstName } from "@/lib/profile-utils";
 import type { PlacementConfirmation, PlacementItem, Profile } from "@/lib/supabase/types";
 
 export default function PlacementChecklist({
@@ -43,7 +44,7 @@ export default function PlacementChecklist({
     <div className="space-y-3">
       <NewItemForm clientId={clientId} />
       {items.length === 0 && (
-        <p className="text-sm text-slate-400">
+        <p className="text-sm text-slate-500">
           Inga föremål tillagda än. Lägg till nycklar, medicinlista, hjälpmedel m.m.
         </p>
       )}
@@ -55,7 +56,7 @@ export default function PlacementChecklist({
           lastConfirmation={lastConfirmationByItem.get(item.id)}
           confirmedByName={
             lastConfirmationByItem.get(item.id)
-              ? profileById.get(lastConfirmationByItem.get(item.id)!.confirmed_by)?.full_name
+              ? getFirstName(profileById.get(lastConfirmationByItem.get(item.id)!.confirmed_by)?.full_name)
               : undefined
           }
         />
@@ -91,28 +92,28 @@ function NewItemForm({ clientId }: { clientId: string }) {
           else setOpen(false);
         });
       }}
-      className="rounded-xl border border-slate-200 bg-white p-3"
+      className="rounded-xl border border-slate-700 bg-slate-900 p-3"
     >
       <input
         name="name"
         required
         placeholder="Vad? (t.ex. reservnycklar)"
-        className="w-full rounded-md border border-slate-300 px-2.5 py-2 text-sm"
+        className="w-full rounded-md border border-slate-600 bg-slate-800 px-2.5 py-2 text-sm text-slate-100"
       />
       <textarea
         name="location_description"
         required
         rows={2}
         placeholder="Var ska det ligga? (t.ex. överst i hallskåpet)"
-        className="mt-2 w-full rounded-md border border-slate-300 px-2.5 py-2 text-sm"
+        className="mt-2 w-full rounded-md border border-slate-600 bg-slate-800 px-2.5 py-2 text-sm text-slate-100"
       />
-      <input type="file" name="photo" accept="image/*" className="mt-2 text-xs" />
-      {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
+      <input type="file" name="photo" accept="image/*" className="mt-2 text-xs text-slate-400" />
+      {error && <p className="mt-1 text-xs text-red-400">{error}</p>}
       <div className="mt-2 flex gap-2">
         <button
           type="button"
           onClick={() => setOpen(false)}
-          className="rounded-md px-2.5 py-1.5 text-xs font-medium text-slate-500"
+          className="rounded-md px-2.5 py-1.5 text-xs font-medium text-slate-400"
         >
           Avbryt
         </button>
@@ -155,28 +156,28 @@ function PlacementItemCard({
             else setEditing(false);
           });
         }}
-        className="rounded-xl border border-blue-200 bg-blue-50/40 p-3"
+        className="rounded-xl border border-blue-800 bg-blue-950/40 p-3"
       >
         <input
           name="name"
           defaultValue={item.name}
           required
-          className="w-full rounded-md border border-slate-300 px-2.5 py-2 text-sm"
+          className="w-full rounded-md border border-slate-600 bg-slate-800 px-2.5 py-2 text-sm text-slate-100"
         />
         <textarea
           name="location_description"
           defaultValue={item.location_description}
           required
           rows={2}
-          className="mt-2 w-full rounded-md border border-slate-300 px-2.5 py-2 text-sm"
+          className="mt-2 w-full rounded-md border border-slate-600 bg-slate-800 px-2.5 py-2 text-sm text-slate-100"
         />
-        <input type="file" name="photo" accept="image/*" className="mt-2 text-xs" />
-        {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
+        <input type="file" name="photo" accept="image/*" className="mt-2 text-xs text-slate-400" />
+        {error && <p className="mt-1 text-xs text-red-400">{error}</p>}
         <div className="mt-2 flex gap-2">
           <button
             type="button"
             onClick={() => setEditing(false)}
-            className="rounded-md px-2.5 py-1.5 text-xs font-medium text-slate-500"
+            className="rounded-md px-2.5 py-1.5 text-xs font-medium text-slate-400"
           >
             Avbryt
           </button>
@@ -193,7 +194,7 @@ function PlacementItemCard({
   }
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-3">
+    <div className="rounded-xl border border-slate-700 bg-slate-900 p-3">
       <div className="flex gap-3">
         {item.photo_url && (
           // eslint-disable-next-line @next/next/no-img-element
@@ -204,9 +205,9 @@ function PlacementItemCard({
           />
         )}
         <div className="min-w-0 flex-1">
-          <p className="font-medium text-slate-800">{item.name}</p>
-          <p className="text-sm text-slate-600">{item.location_description}</p>
-          <p className="mt-1 text-xs text-slate-400">
+          <p className="font-medium text-slate-100">{item.name}</p>
+          <p className="text-sm text-slate-300">{item.location_description}</p>
+          <p className="mt-1 text-xs text-slate-500">
             {lastConfirmation
               ? `Senast bekräftad av ${confirmedByName ?? "okänd"} · ${formatDate(
                   new Date(lastConfirmation.confirmed_at),
@@ -230,13 +231,13 @@ function PlacementItemCard({
         >
           ✓ Jag har lagt tillbaka detta
         </button>
-        <button onClick={() => setEditing(true)} className="text-xs font-medium text-blue-600">
+        <button onClick={() => setEditing(true)} className="text-xs font-medium text-blue-400">
           Redigera
         </button>
         <ConfirmButton
           onConfirm={() => deletePlacementItem(item.id, clientId)}
           label="Ta bort"
-          className="text-xs font-medium text-red-600"
+          className="text-xs font-medium text-red-400"
           confirmText="Ta bort föremålet från listan?"
         />
       </div>

@@ -14,6 +14,7 @@ import {
   sv,
 } from "@/lib/date-utils";
 import { useRealtimeList } from "@/lib/hooks/useRealtimeList";
+import { getFirstName } from "@/lib/profile-utils";
 import ShiftDialog from "./ShiftDialog";
 import type { Client, Profile, Shift } from "@/lib/supabase/types";
 
@@ -72,37 +73,37 @@ export default function ScheduleView({
         <div className="flex items-center gap-2">
           <button
             onClick={stepBack}
-            className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-100"
+            className="rounded-lg border border-slate-600 px-3 py-1.5 text-sm font-medium text-slate-300 hover:bg-slate-800"
             aria-label="Föregående"
           >
             ←
           </button>
           <button
             onClick={() => setAnchor(new Date())}
-            className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-100"
+            className="rounded-lg border border-slate-600 px-3 py-1.5 text-sm font-medium text-slate-300 hover:bg-slate-800"
           >
             Idag
           </button>
           <button
             onClick={stepForward}
-            className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-100"
+            className="rounded-lg border border-slate-600 px-3 py-1.5 text-sm font-medium text-slate-300 hover:bg-slate-800"
             aria-label="Nästa"
           >
             →
           </button>
-          <span className="ml-2 text-sm font-medium capitalize text-slate-700">
+          <span className="ml-2 text-sm font-medium capitalize text-slate-200">
             {formatDate(anchor, "MMMM yyyy", { locale: sv })}
           </span>
         </div>
 
         <div className="flex items-center gap-2">
-          <div className="hidden overflow-hidden rounded-lg border border-slate-300 md:flex">
+          <div className="hidden overflow-hidden rounded-lg border border-slate-600 md:flex">
             {(["vecka", "manad"] as View[]).map((v) => (
               <button
                 key={v}
                 onClick={() => setView(v)}
                 className={`px-3 py-1.5 text-sm font-medium capitalize ${
-                  view === v ? "bg-blue-600 text-white" : "bg-white text-slate-600 hover:bg-slate-100"
+                  view === v ? "bg-blue-600 text-white" : "bg-slate-900 text-slate-300 hover:bg-slate-800"
                 }`}
               >
                 {v}
@@ -138,8 +139,8 @@ export default function ScheduleView({
       {view === "vecka" && (
         <div className="hidden grid-cols-7 gap-3 md:grid">
           {weekDays.map((day) => (
-            <div key={day.toISOString()} className="min-h-[10rem] rounded-xl border border-slate-200 bg-white p-2">
-              <p className="mb-2 text-xs font-semibold capitalize text-slate-500">
+            <div key={day.toISOString()} className="min-h-[10rem] rounded-xl border border-slate-700 bg-slate-900 p-2">
+              <p className="mb-2 text-xs font-semibold capitalize text-slate-400">
                 {formatDate(day, "EEE d/M", { locale: sv })}
               </p>
               <div className="space-y-1.5">
@@ -156,7 +157,7 @@ export default function ScheduleView({
               </div>
               <button
                 onClick={() => setDialog({ shift: null, date: day })}
-                className="mt-2 w-full rounded-md py-1 text-xs font-medium text-blue-600 hover:bg-blue-50"
+                className="mt-2 w-full rounded-md py-1 text-xs font-medium text-blue-400 hover:bg-blue-950"
               >
                 + Lägg till
               </button>
@@ -167,8 +168,8 @@ export default function ScheduleView({
 
       {/* Desktop: månadsvy */}
       {view === "manad" && (
-        <div className="hidden overflow-hidden rounded-xl border border-slate-200 md:block">
-          <div className="grid grid-cols-7 bg-slate-50 text-xs font-semibold text-slate-500">
+        <div className="hidden overflow-hidden rounded-xl border border-slate-700 md:block">
+          <div className="grid grid-cols-7 bg-slate-900 text-xs font-semibold text-slate-400">
             {["Mån", "Tis", "Ons", "Tor", "Fre", "Lör", "Sön"].map((d) => (
               <div key={d} className="px-2 py-1.5">
                 {d}
@@ -176,15 +177,15 @@ export default function ScheduleView({
             ))}
           </div>
           {monthGrid.map((week, wi) => (
-            <div key={wi} className="grid grid-cols-7 border-t border-slate-200">
+            <div key={wi} className="grid grid-cols-7 border-t border-slate-700">
               {week.map((day) => {
                 const dayShifts = shiftsFor(day);
                 return (
                   <button
                     key={day.toISOString()}
                     onClick={() => setDialog({ shift: null, date: day })}
-                    className={`min-h-[5.5rem] border-r border-slate-100 p-1.5 text-left last:border-r-0 ${
-                      isSameMonth(day, anchor) ? "bg-white" : "bg-slate-50 text-slate-400"
+                    className={`min-h-[5.5rem] border-r border-slate-800 p-1.5 text-left last:border-r-0 ${
+                      isSameMonth(day, anchor) ? "bg-slate-900" : "bg-slate-950 text-slate-600"
                     }`}
                   >
                     <span className="text-xs font-medium">{formatDate(day, "d")}</span>
@@ -198,15 +199,15 @@ export default function ScheduleView({
                           }}
                           className={`truncate rounded px-1 py-0.5 text-[11px] ${
                             s.assigned_to === currentUserId
-                              ? "bg-blue-100 text-blue-800"
-                              : "bg-slate-100 text-slate-600"
+                              ? "bg-blue-900 text-blue-200"
+                              : "bg-slate-800 text-slate-300"
                           }`}
                         >
-                          {formatTime(new Date(s.start_time))} {profileById.get(s.assigned_to)?.full_name}
+                          {formatTime(new Date(s.start_time))} {getFirstName(profileById.get(s.assigned_to)?.full_name)}
                         </p>
                       ))}
                       {dayShifts.length > 2 && (
-                        <p className="text-[11px] text-slate-400">+{dayShifts.length - 2} till</p>
+                        <p className="text-[11px] text-slate-500">+{dayShifts.length - 2} till</p>
                       )}
                     </div>
                   </button>
@@ -252,15 +253,15 @@ function DaySection({
 }) {
   const isToday = isSameDay(day, new Date());
   return (
-    <div className={`rounded-xl border p-3 ${isToday ? "border-blue-300 bg-blue-50/40" : "border-slate-200 bg-white"}`}>
+    <div className={`rounded-xl border p-3 ${isToday ? "border-blue-700 bg-blue-950/40" : "border-slate-700 bg-slate-900"}`}>
       <div className="mb-2 flex items-center justify-between">
-        <p className="text-sm font-semibold capitalize text-slate-700">{formatDayLabel(day)}</p>
-        <button onClick={onAdd} className="text-xs font-medium text-blue-600">
+        <p className="text-sm font-semibold capitalize text-slate-200">{formatDayLabel(day)}</p>
+        <button onClick={onAdd} className="text-xs font-medium text-blue-400">
           + Lägg till
         </button>
       </div>
       {shifts.length === 0 ? (
-        <p className="text-sm text-slate-400">Inga pass inlagda</p>
+        <p className="text-sm text-slate-500">Inga pass inlagda</p>
       ) : (
         <div className="space-y-2">
           {shifts.map((shift) => (
@@ -300,15 +301,15 @@ function ShiftChip({
       onClick={onClick}
       className={`w-full rounded-lg border px-2.5 py-1.5 text-left transition ${
         isMine
-          ? "border-blue-300 bg-blue-100 hover:bg-blue-200"
-          : "border-slate-200 bg-slate-100 hover:bg-slate-200"
+          ? "border-blue-700 bg-blue-900 hover:bg-blue-800"
+          : "border-slate-700 bg-slate-800 hover:bg-slate-700"
       } ${large ? "text-sm" : "text-xs"}`}
     >
-      <p className="font-semibold text-slate-800">
+      <p className="font-semibold text-slate-100">
         {formatTime(new Date(shift.start_time))}–{formatTime(new Date(shift.end_time))}
       </p>
-      <p className={isMine ? "text-blue-800" : "text-slate-600"}>
-        {isMine ? "Du" : profile?.full_name ?? "Okänd"}
+      <p className={isMine ? "text-blue-200" : "text-slate-300"}>
+        {isMine ? "Du" : getFirstName(profile?.full_name)}
         {client ? ` · ${client.name}` : ""}
       </p>
     </button>

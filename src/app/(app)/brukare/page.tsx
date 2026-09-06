@@ -14,20 +14,20 @@ export default async function BrukarePage() {
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-6">
-      <h1 className="mb-4 text-2xl font-bold text-slate-900">Brukare</h1>
+      <h1 className="mb-4 text-2xl font-bold text-slate-100">Brukare</h1>
       <NewClientForm />
       <div className="mt-4 space-y-2">
         {(clients ?? []).length === 0 && (
-          <p className="text-sm text-slate-400">Inga brukare tillagda än.</p>
+          <p className="text-sm text-slate-500">Inga brukare tillagda än.</p>
         )}
         {(clients ?? []).map((client) => (
           <Link
             key={client.id}
             href={`/brukare/${client.id}`}
-            className="block rounded-xl border border-slate-200 bg-white p-3 hover:border-blue-300 hover:bg-blue-50/40"
+            className="block rounded-xl border border-slate-700 bg-slate-900 p-3 hover:border-blue-700 hover:bg-blue-950/40"
           >
-            <p className="font-medium text-slate-800">{client.name}</p>
-            {client.address && <p className="text-sm text-slate-500">{client.address}</p>}
+            <p className="font-medium text-slate-100">{client.name}</p>
+            {client.address && <p className="text-sm text-slate-400">{client.address}</p>}
           </Link>
         ))}
       </div>

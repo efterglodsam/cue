@@ -13,7 +13,7 @@ export default async function AnslagstavlaPage() {
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-6">
-      <h1 className="mb-4 text-2xl font-bold text-slate-900">Anslagstavla</h1>
+      <h1 className="mb-4 text-2xl font-bold text-slate-100">Anslagstavla</h1>
       <NoteBoard initialNotes={notes ?? []} profiles={profiles ?? []} currentUserId={userId} />
     </div>
   );

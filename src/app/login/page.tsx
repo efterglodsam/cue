@@ -69,16 +69,16 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="flex min-h-dvh flex-col items-center justify-center bg-slate-50 px-4">
-      <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
-        <h1 className="text-xl font-semibold text-slate-900">Logga in på Cue</h1>
-        <p className="mt-1 text-sm text-slate-500">
+    <main className="flex min-h-dvh flex-col items-center justify-center bg-slate-950 px-4">
+      <div className="w-full max-w-sm rounded-2xl bg-slate-900 p-6 shadow-sm ring-1 ring-slate-700">
+        <h1 className="text-xl font-semibold text-slate-100">Logga in på Cue</h1>
+        <p className="mt-1 text-sm text-slate-400">
           Schema, byten och anslagstavla för teamet — skriv in din e-post så skickar vi en
           inloggningslänk.
         </p>
 
         {status === "sent" ? (
-          <div className="mt-6 rounded-lg bg-emerald-50 p-4 text-sm text-emerald-800">
+          <div className="mt-6 rounded-lg bg-emerald-950 p-4 text-sm text-emerald-300">
             Vi har skickat en inloggningslänk till <strong>{email}</strong>. Öppna e-posten på
             den här enheten och klicka på länken.
           </div>
@@ -86,7 +86,7 @@ export default function LoginPage() {
           <div>
             <form onSubmit={handleSubmit} className="mt-6 space-y-4">
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-slate-700">
+                <label htmlFor="email" className="block text-sm font-medium text-slate-300">
                   E-postadress
                 </label>
                 <input
@@ -96,13 +96,13 @@ export default function LoginPage() {
                   autoComplete="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2.5 text-base outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                  className="mt-1 w-full rounded-lg border border-slate-600 bg-slate-800 px-3 py-2.5 text-base text-slate-100 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-900"
                   placeholder="namn@exempel.se"
                 />
               </div>
 
               {status === "error" && (
-                <p className="text-sm text-red-600" role="alert">
+                <p className="text-sm text-red-400" role="alert">
                   {error}
                 </p>
               )}
@@ -115,12 +115,12 @@ export default function LoginPage() {
                 {status === "loading" ? "Skickar länk…" : "Skicka inloggningslänk"}
               </button>
             </form>
-            <div className="mt-4 border-t border-slate-200 pt-4">
+            <div className="mt-4 border-t border-slate-700 pt-4">
               <button
                 type="button"
                 onClick={() => void handleOAuth("google")}
                 disabled={status === "loading"}
-                className="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-base font-medium text-slate-700 transition hover:bg-slate-50 disabled:opacity-60"
+                className="w-full rounded-lg border border-slate-600 px-4 py-2.5 text-base font-medium text-slate-200 transition hover:bg-slate-800 disabled:opacity-60"
               >
                 {status === "loading" ? "Ansluter…" : "Fortsätt med Google"}
               </button>
