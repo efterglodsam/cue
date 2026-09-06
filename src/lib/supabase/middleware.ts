@@ -43,14 +43,27 @@ export async function updateSession(request: NextRequest) {
   if (!user && !isPublicPath && !isStaticAsset) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
-    return NextResponse.redirect(url);
+    return redirectWithCookies(url, supabaseResponse);
   }
 
   if (user && request.nextUrl.pathname === "/login") {
     const url = request.nextUrl.clone();
     url.pathname = "/schema";
-    return NextResponse.redirect(url);
+    return redirectWithCookies(url, supabaseResponse);
   }
 
   return supabaseResponse;
+}
+
+// supabase.auth.getUser() kan ha förnyat sessionen och satt nya cookies på
+// supabaseResponse. Ett nyskapat NextResponse.redirect() vet inget om dessa
+// — utan att kopiera med dem tappas den förnyade sessionen på vägen, nästa
+// anrop försöker förnya med samma (nu förbrukade) refresh-token och
+// användaren studsar mellan /login och /schema i all oändlighet.
+function redirectWithCookies(url: URL, supabaseResponse: NextResponse) {
+  const redirectResponse = NextResponse.redirect(url);
+  supabaseResponse.cookies.getAll().forEach((cookie) => {
+    redirectResponse.cookies.set(cookie);
+  });
+  return redirectResponse;
 }
