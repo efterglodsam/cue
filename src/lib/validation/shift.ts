@@ -1,4 +1,4 @@
-﻿// Ren valideringslogik för pass, utan beroenden på Supabase eller Server
+// Ren valideringslogik för pass, utan beroenden på Supabase eller Server
 // Actions, så den går att enhetstesta isolerat.
 
 import { zonedWallTimeToUtc } from "@/lib/date-utils";
@@ -33,7 +33,7 @@ export function parseShiftInput(input: {
   }
 
   // Tiderna kommer från ett <input type="datetime-local"> och saknar
-  // tidszon - tolka dem som svensk lokal tid (se zonedWallTimeToUtc), inte
+  // tidszon — tolka dem som svensk lokal tid (se zonedWallTimeToUtc), inte
   // som lokal tid i den miljö Server Action:en råkar köra i.
   const start = zonedWallTimeToUtc(startTime);
   const end = zonedWallTimeToUtc(endTime);
